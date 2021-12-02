@@ -2,21 +2,16 @@
   (with-open [rdr (clojure.java.io/reader file)]
     (doall (line-seq rdr))))
 
-(def lines (map #(Integer/parseInt %) (get-lines "./input.txt")))
+(def lines
+  (map #(Integer/parseInt %) (get-lines "./input.txt")))
 
-(defn part1 [lines]
-  (loop [l lines p ##Inf res 0]
-    (cond
-      (empty? l) res
-      (< p (first l)) (recur (rest l) (first l) (inc res))
-      :else (recur (rest l) (first l) res))))
 
 (defn queue
   ([] (clojure.lang.PersistentQueue/EMPTY))
   ([coll]
     (reduce conj clojure.lang.PersistentQueue/EMPTY coll)))
 
-(defn part2 [coll k]
+(defn solve [coll k]
   (loop [c (drop k coll)
          q (queue (take k  coll))
          s (apply + q) 
@@ -29,5 +24,5 @@
                      ss
                      (if (< s ss) (inc res) res))))))
 
-(part1 lines)
-(part2 lines 3)
+(solve lines 1)
+(solve lines 3)
