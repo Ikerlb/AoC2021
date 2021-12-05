@@ -13,6 +13,12 @@
       parse-point
       (string/split line #" -> "))))
 
+(defn delta [n1 n2]
+  (cond
+    (pos? (- n2 n1)) 1 
+    (zero? (- n2 n1)) 0
+    :else -1))
+
 (defn span [sx sy ex ey]
   (let [dx (delta sx ex)
         dy (delta sy ey)]
@@ -36,13 +42,6 @@
     #(into-counter %1 %2)
     {}
     segments))
-
-(defn delta [n1 n2]
-  (cond
-    (pos? (- n2 n1)) 1 
-    (zero? (- n2 n1)) 0
-    :else -1))
-
 
 (defn horizontal-and-vertical [segments]
   (filter
