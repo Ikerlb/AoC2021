@@ -1,7 +1,22 @@
 # TODO: improve this.
-# TODO: Maybe a packet class
 # I do like how _eval came out though
 from functools import reduce
+
+class Packet:
+    def __init__(self, v, tid, cnt, end):
+        self.version = v    
+        self.tid = tid
+        if self.tid == 4:
+            self.v = cnt    
+        else:
+            self.children = cnt 
+        self.end = end
+
+    def __repr__(self):
+        if self.tid == 4:    
+            return f"version={self.version} value={self.v}"
+        return f"version={self.version} children={self.children}" 
+
 
 def bin_base(s, base):
     i = int(s, base)    
@@ -22,63 +37,69 @@ def decode(bits, i):
     if tid == 4:
         n = []
         while bits[i] != "0":                    
-            n.extend(bits[i + 1: i + 5])            
+            n.extend(bits[i + 1: i + 5])
             i += 5
-        n.extend(bits[i + 1: i + 5])        
-        return (vn, tid, int("".join(n), 2), i + 5)
+        n.extend(bits[i + 1: i + 5]) 
+        return Packet(vn, tid, int("".join(n), 2), i+5) 
     elif bits[i] == "0":
-        n = []
+        children = []
         i += 1    
         bl = int(bits[i:i + 15], 2)
         i += 15 
         end = i + bl
-        while (pchld := decode(bits, i))[-1] < end: 
-            n.append(pchld) 
-            i = pchld[-1] 
-        i = pchld[-1]
-        n.append(pchld)
-        return (vn, tid, n, i)
+        while (pchld := decode(bits, i)).end < end: 
+            children.append(pchld) 
+            i = pchld.end
+        i = pchld.end
+        children.append(pchld)
+        return Packet(vn, tid, children, i)
     else:
-        n = []
+        children = []
         i += 1    
         nsp = int(bits[i:i + 11], 2)
         i += 11 
         for _ in range(nsp):
-            pchld = decode(bits, i)                
-            n.append(pchld)
-            i = pchld[-1] 
-        return (vn, tid, n, i)
+            pchld = decode(bits, i) 
+            children.append(pchld)
+            i = pchld.end
+        return Packet(vn, tid, children, i)
 
-def versions(node): 
-    if node[1] == 4: 
-        return node[0]    
-    return node[0] + sum(versions(nn) for nn in node[2])
+def versions(n):
+    if n.tid == 4:    
+        return n.version
+    return n.version + sum(versions(nn) for nn in n.children)
 
 def prod(i):
     return reduce(lambda x, y: x * y, i, 1)    
 
 def _eval(node):
-    if node[1] == 4:   
-        return node[2]    
-    elif node[1] == 0:   
-        return sum(_eval(nn) for nn in node[2])     
-    elif node[1] == 1:
-        return prod(_eval(nn) for nn in node[2])
-    elif node[1] == 2:
-        return min(_eval(nn) for nn in node[2])    
-    elif node[1] == 3:
-        return max(_eval(nn) for nn in node[2])    
-    elif node[1] == 5:
-        n1, n2 = map(_eval, node[2])
-        return 1 if n1 > n2 else 0      
-    elif node[1] == 6:
-        n1, n2 = map(_eval, node[2])
-        return 1 if n1 < n2 else 0      
-    elif node[1] == 7:
-        n1, n2 = map(_eval, node[2])
-        return 1 if n1 == n2 else 0      
+    if node.tid == 4:   
+        return node.v
+    elif node.tid == 0:   
+        return sum(_eval(nn) for nn in node.children)
+    elif node.tid == 1:
+        return prod(_eval(nn) for nn in node.children)
+    elif node.tid == 2:
+        return min(_eval(nn) for nn in node.children)
+    elif node.tid == 3:
+        return max(_eval(nn) for nn in node.children)
+    elif node.tid == 5:
+        n1, n2 = map(_eval, node.children)
+        return 1 if n1 > n2 else 0
+    elif node.tid == 6:
+        n1, n2 = map(_eval, node.children)
+        return 1 if n1 < n2 else 0
+    elif node.tid == 7:
+        n1, n2 = map(_eval, node.children)
+        return 1 if n1 == n2 else 0
 
 def part1(bits):
     node = decode(bits, 0)            
     return versions(node)
 
+def part2(bits):
+    node = decode(bits, 0)    
+    return _eval(node)
+
+print(part1(bits))
+print(part2(bits))
