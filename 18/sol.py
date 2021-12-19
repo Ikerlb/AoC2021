@@ -1,6 +1,7 @@
 from math import inf
 
 class SnailfishNumber:
+    # leaves should have val = None
     def __init__(self, l=None, r=None, p=None, v=None):
         self.l = l 
         self.r = r 
@@ -27,10 +28,7 @@ def parse(s, i):
     l, li = parse(s, i + 1) 
     r, ri = parse(s, li + 1)
     n = SnailfishNumber(l, r)
-    if type(l) != int:
-        l.parent = n
-    if type(r) != int:
-        r.parent = n
+    l.parent = r.parent = n
     return n, ri + 1
 
 with open("input.txt") as f:
@@ -90,7 +88,7 @@ def split(n):
         return False    
     return split(n.l) or split(n.r)
 
-# obvs mutates root
+# mutates root
 def reduce(root):
     while explode(root, 0) or split(root):        
         pass    
