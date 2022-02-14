@@ -1,34 +1,47 @@
 from collections import Counter
 
-with open("./test.txt", "r") as f:
-    text = f.read()
-    nums = [int(line, 2) for line in text.splitlines()] 
 
-def ratio(ones, f): 
+with open("./input.txt", "r") as f:
+    text = f.read()
+    lines = text.splitlines() 
+    digits = len(lines[0]) - 1
+    nums = [int(line, 2) for line in lines] 
+
+def ratio(nums, f, md): 
     res = 0
-    md = max(ones)
-    for i in range(md, -1, -1):    
-        o = ones[i]
-        z = len(nums) - o
+    for i in range(md, -1, -1):
+        o, z = count_by_index(nums, i)
         if f(o, z) == o:
-            res += (1 << i)    
+            res += (1 << i)
     return res
 
-def part1():
-    # indices and their # of ones
-    ones = Counter()
-    for n in nums:
-        i = 0
-        while n:    
-            if n & 1 == 1:
-                ones[i] += 1
-            n >>= 1    
-            i += 1
-    # or just get the binary compliment
-    # of either one of the other
-    # this is cleaner it think
-    gamma = ratio(ones, max)
-    epsilon = ratio(ones, min)
+def count_by_index(nums, i):
+    total = len(nums)
+    res = ones = 0
+    for n in nums:            
+        if (n >> i) & 1:
+            ones += 1    
+    return ones, total - ones  
+
+def part1(nums, digits):
+    gamma = ratio(nums, max, digits)
+    epsilon = ratio(nums, min, digits)
     return gamma * epsilon
 
-# to do the part 2, kinda tired xd
+
+def filter_by(nums, f, md):
+    n, i = len(nums), md
+    while len(nums) > 1 and i >= 0:
+        o, z = count_by_index(nums, i)
+        s = f(o, z)
+        nums = [n for n in nums if ((n >> i) & 1) == s] 
+        i -= 1
+    return nums.pop()
+
+def part2(nums, digits):
+    o2  = filter_by(nums, lambda o, z: 1 if o >= z else 0, digits)
+    co2 = filter_by(nums, lambda o, z: 1 if o < z else 0, digits)
+    return o2 * co2
+
+print(part1(nums, digits))
+print(part2(nums, digits))

@@ -125,7 +125,8 @@ def part2(steps):
     lit = set()
     for op, c in steps:
         xs, xe, ys, ye, zs, ze = c
-        c = AABB(xs, xe + 1, ys, ye + 1, zs, ze + 1)
+        c = AABB(xs-0.5,xe+0.5,ys-0.5,ye+0.5,zs-0.5,ze+0.5)
+        print(op, c)
         for cc in lit.copy():
             if (r := c.remove(cc)) is not None:                                    
                 lit.remove(cc)    
